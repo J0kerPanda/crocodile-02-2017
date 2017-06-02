@@ -25,9 +25,9 @@ public class SingleplayerGameStateContent extends BaseGameContent {
     private JsonNode dashesJson;
 
     @SuppressWarnings("OverlyBroadCatchBlock")
-    public SingleplayerGameStateContent(@NotNull Dashes dashes, float timePassed, float timeLimit) {
+    public SingleplayerGameStateContent(@NotNull Dashes dashes, float timePassed) {
 
-        super(GameType.SINGLEPLAYER, timePassed, timeLimit);
+        super(GameType.SINGLEPLAYER, timePassed);
         try {
             this.dashesJson = OBJECT_MAPPER.readTree(dashes.getPointsJson());
         } catch (IOException exception) {

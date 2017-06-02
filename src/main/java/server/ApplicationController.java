@@ -2,8 +2,8 @@ package server;
 
 import database.AccountService;
 import database.AccountServiceDb;
-import database.DashesService;
-import database.DashesServiceDb;
+import database.WordService;
+import database.WordServiceDb;
 import entities.Account;
 import httpmessages.AccountData;
 import httpmessages.DashesData;
@@ -35,14 +35,14 @@ public class ApplicationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationController.class);
 
     private final AccountService accountService;
-    private final DashesService dashesService;
+    private final WordService wordService;
 
     @Autowired
     public ApplicationController(
-        AccountServiceDb accountService, DashesServiceDb dashesService) {
+        AccountServiceDb accountService, WordServiceDb wordService) {
 
         this.accountService = accountService;
-        this.dashesService = dashesService;
+        this.wordService = wordService;
     }
 
     @ExceptionHandler(DataAccessException.class)
@@ -244,6 +244,6 @@ public class ApplicationController {
     @GetMapping(path = "/rand-dashes/", produces = "application/json")
     public ResponseEntity getRandomDashes() throws IOException {
 
-        return ResponseEntity.ok(new DashesData(dashesService.getRandomDashes()));
+        return ResponseEntity.ok(new DashesData(wordService.getRandomDashes()));
     }
 }

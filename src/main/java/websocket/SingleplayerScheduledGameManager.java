@@ -41,8 +41,7 @@ public class SingleplayerScheduledGameManager extends ScheduledGameManager<Singl
                 messageType.toString(),
                 new SingleplayerGameStateContent(
                     game.getDashes(),
-                    this.getTimeLeft(),
-                    GameManagerService.SINGLEPLAYER_TIME_LIMIT));
+                    this.getTimeLeft()));
         }
 
         private synchronized void endSingleplayerGame(GameResult gameResult) {

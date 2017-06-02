@@ -72,7 +72,6 @@ public class MultiplayerScheduledGameManager extends ScheduledGameManager<Multip
                 messageType.toString(),
                 new MultiplayerGameStateContent(
                     getTimeLeft(),
-                    GameManagerService.MULTIPLAYER_TIME_LIMIT,
                     gameRelationManager.getRelation(login).getRole(),
                     playerInfos,
                     getPoints(),

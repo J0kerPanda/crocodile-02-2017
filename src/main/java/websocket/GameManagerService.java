@@ -2,8 +2,8 @@ package websocket;
 
 import database.AccountService;
 import database.AccountServiceDb;
-import database.DashesService;
-import database.DashesServiceDb;
+import database.WordService;
+import database.WordServiceDb;
 import entities.Dashes;
 import entities.MultiplayerGame;
 import entities.SingleplayerGame;
@@ -40,7 +40,7 @@ public class GameManagerService {
     private static final AtomicInteger ANSWER_ID_GEN = new AtomicInteger(1);
 
     private final AccountService accountService;
-    private final DashesService dashesService;
+    private final WordService wordService;
 
     //todo concurrent collections?
     private final GameRelationManager gameRelationManager = new GameRelationManager();
@@ -52,10 +52,10 @@ public class GameManagerService {
     @Autowired
     public GameManagerService(
         AccountServiceDb accountService,
-        DashesServiceDb dashesService) {
+        WordServiceDb wordService) {
 
         this.accountService = accountService;
-        this.dashesService = dashesService;
+        this.wordService = wordService;
 
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(8);
 
@@ -180,7 +180,6 @@ public class GameManagerService {
                 }
 
                 sendPlayersConnected(initialSessions, playersToConnect);
-
                 playersToConnect.forEach(queuedPlayers::remove);
                 if (guessers.isEmpty()) {
                     break;
@@ -193,7 +192,7 @@ public class GameManagerService {
 
         clearData(session);
         final String login = SessionOperator.getLogin(session);
-        final Dashes dashes = dashesService.getRandomDashes(login);
+        final Dashes dashes = wordService.getRandomDashes(login);
 
         LOGGER.info("Got dashes #{}, {} for {}", dashes.getId(), dashes.getWord(), login);
 
@@ -257,6 +256,11 @@ public class GameManagerService {
             return;
         }
 
+        scheduledGame.rechedule(
+            () -> scheduledGame.runLoseTask(GameResult.GAME_LOST),
+            scheduledGame.getFinishTime());
+        scheduledGame.cancelShutdown();
+
         final ArrayList<WebSocketSession> playerSessions = gameRelationManager.getGameSessions(scheduledGame);
 
         for (WebSocketSession session : playerSessions) {
@@ -265,9 +269,7 @@ public class GameManagerService {
             SessionOperator.sendMessage(session, scheduledGame.getJoinGameMessage(login));
         }
 
-        scheduledGame.rechedule(
-            () -> scheduledGame.runLoseTask(GameResult.GAME_LOST),
-            scheduledGame.getFinishTime());
+        scheduledGame.resumeShutdown();
 
         LOGGER.info("{} game #{} started, timer: {}.",
             gameType.toString().toUpperCase(), scheduledGame.getGame().getId(), scheduledGame.getTimeLeft());
@@ -403,7 +405,7 @@ public class GameManagerService {
 
         final ArrayList<String> players = guesserLogins;
         players.add(painterLogin);
-        final String word = dashesService.getRandomDashes().getWord();
+        final String word = wordService.getRandomWord();
 
         final MultiplayerGame game = new MultiplayerGame(word, players);
         final ScheduledGame scheduledGame = multiplayerManager.createScheduledGame(game);
@@ -429,7 +431,7 @@ public class GameManagerService {
 
         accountService.updateAccountRating(winnerLogin, scheduledGame.getWinScore());
         if (scheduledGame instanceof SingleplayerScheduledGameManager.SingleplayerScheduledGame) {
-            dashesService.addUsedDashes(winnerLogin, ((SingleplayerGame) scheduledGame.getGame()).getDashes().getId());
+            wordService.addUsedDashes(winnerLogin, ((SingleplayerGame) scheduledGame.getGame()).getDashes().getId());
         }
         scheduledGame.runWinTask(winnerLogin);
     }

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 @Service
-public class DashesServiceDb implements DashesService {
+public class WordServiceDb implements WordService {
 
     private static final String LOGIN_PARAM = "plogin";
     private static final String ID_PARAM = "pid";
@@ -26,7 +26,7 @@ public class DashesServiceDb implements DashesService {
 
     private final NamedParameterJdbcTemplate database;
 
-    public DashesServiceDb(NamedParameterJdbcTemplate database) {
+    public WordServiceDb(NamedParameterJdbcTemplate database) {
         this.database = database;
     }
 
@@ -113,6 +113,23 @@ public class DashesServiceDb implements DashesService {
         }
 
         return result.get(RANDOM.nextInt(result.size()));
+    }
+
+    @Override
+    public @NotNull String getRandomWord() throws DataRetrievalFailureException {
+
+        final MapSqlParameterSource source = new MapSqlParameterSource();
+        final String selectWordSql =
+            " SELECT word.word FROM word " +
+                " OFFSET floor(random() * ( SELECT count(*) FROM word )) " +
+                " LIMIT 1;";
+
+        final List<String> result = database.queryForList(selectWordSql, source, String.class);
+        if (result.isEmpty()) {
+            throw new DataRetrievalFailureException("word retrieval error");
+        }
+
+        return result.get(0);
     }
 
     private boolean checkAllWordsUsed(@NotNull String login) {

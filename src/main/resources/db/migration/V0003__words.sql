@@ -1,0 +1,4 @@
+CREATE TABLE public.word (
+  id   SERIAL PRIMARY KEY     NOT NULL,
+  word CHARACTER VARYING(50)  NOT NULL
+);

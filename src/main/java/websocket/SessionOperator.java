@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import server.ApplicationController;
@@ -29,6 +30,7 @@ public final class SessionOperator {
     }
 
     @SuppressWarnings("OverlyBroadCatchBlock")
+    @Async
     public static void sendMessage(WebSocketSession session, WebSocketMessage message) {
 
         try {

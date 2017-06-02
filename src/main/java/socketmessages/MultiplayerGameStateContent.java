@@ -23,13 +23,12 @@ public class MultiplayerGameStateContent extends BaseGameContent {
 
     public MultiplayerGameStateContent(
         float timePassed,
-        float timeLimit,
         @NotNull PlayerRole role,
         @NotNull ArrayList<PlayerInfo> players,
         @NotNull ArrayList<PicturePointContent> points,
         @Nullable String word) {
 
-        super(GameType.MULTIPLAYER, timePassed, timeLimit);
+        super(GameType.MULTIPLAYER, timePassed);
         this.role = role;
         this.players = players;
         this.points = points;

@@ -1,10 +1,11 @@
 package server;
 
 import database.AccountServiceDb;
-import database.DashesServiceDb;
+import database.WordServiceDb;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.handler.PerConnectionWebSocketHandler;
 import websocket.GameManagerService;
@@ -13,6 +14,7 @@ import websocket.WebSocketMessageHandler;
 
 @SuppressWarnings("SpringJavaAutowiringInspection")
 @Configuration
+@EnableAsync
 public class ApplicationConfiguration {
 
     @Bean
@@ -21,8 +23,8 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public DashesServiceDb dashesService(NamedParameterJdbcTemplate database) {
-        return new DashesServiceDb(database);
+    public WordServiceDb dashesService(NamedParameterJdbcTemplate database) {
+        return new WordServiceDb(database);
     }
 
     @Bean
@@ -31,8 +33,8 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public GameManagerService gameManagerService(AccountServiceDb accountServiceDb, DashesServiceDb dashesService) {
-        return new GameManagerService(accountServiceDb, dashesService);
+    public GameManagerService gameManagerService(AccountServiceDb accountServiceDb, WordServiceDb wordService) {
+        return new GameManagerService(accountServiceDb, wordService);
     }
 
     @Bean
