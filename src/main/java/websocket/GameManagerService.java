@@ -384,6 +384,33 @@ public class GameManagerService {
                         vote)));
     }
 
+    public void clearCanvas(WebSocketSession session) {
+
+        final String login = SessionOperator.getLogin(session);
+        final ScheduledGame scheduledGame = getUserScheduledGame(login);
+
+        if (scheduledGame == null) {
+            return;
+        }
+
+        final PlayerRole role = gameRelationManager.getRelation(login).getRole();
+
+        if (role != PlayerRole.PAINTER) {
+            return;
+        }
+
+        final ArrayList<WebSocketSession> sessions = gameRelationManager.getGameSessions(scheduledGame);
+        final EmptyContent emptyContent = new EmptyContent();
+
+        sessions.forEach(
+            (WebSocketSession reciever) ->
+                SessionOperator.sendMessage(
+                    reciever,
+                    new WebSocketMessage<>(
+                        MessageType.CLEAR.toString(),
+                        emptyContent)));
+    }
+
     private void sendPlayersConnected(ArrayList<WebSocketSession> initialPlayers, ArrayList<String> connectedPlayers) {
 
         final ArrayList<PlayerInfo> playerInfos = new ArrayList<>(

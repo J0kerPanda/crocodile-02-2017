@@ -60,6 +60,10 @@ public class GameSocketHandler extends TextWebSocketHandler {
             MessageType.GET_STATE,
             (WebSocketSession s, TextMessage m) -> handleGetState(s));
 
+        webSocketMessageHandler.setHandler(
+            MessageType.CLEAR,
+            (WebSocketSession s, TextMessage m) -> handleClearCanvas(s));
+
 
         webSocketMessageHandler.setHandler(
             MessageType.EXIT_GAME,
@@ -150,6 +154,11 @@ public class GameSocketHandler extends TextWebSocketHandler {
     private void handleGetState(WebSocketSession session) {
 
         gameManagerService.sendGameState(session);
+    }
+
+    private void handleClearCanvas(WebSocketSession session) {
+
+        gameManagerService.clearCanvas(session);
     }
 
     private void handleExitGame(WebSocketSession session) {

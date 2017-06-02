@@ -18,7 +18,8 @@ public enum MessageType {
     PLAYERS_CONNECT("PLAYERS_CONNECT"),
     PLAYER_DISCONNECT("PLAYER_DISCONNECT"),
     VOTE_ANSWER("VOTE_ANSWER"),
-    NEW_VOTE("NEW_VOTE");
+    NEW_VOTE("NEW_VOTE"),
+    CLEAR("CLEAR");
 
     private final String type;
 
