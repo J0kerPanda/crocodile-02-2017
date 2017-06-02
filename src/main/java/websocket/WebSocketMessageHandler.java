@@ -7,11 +7,14 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import socketmessages.MessageType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 
 @Service
 public class WebSocketMessageHandler {
 
+    public static final ArrayList<MessageType> IGNORE_LOGGING_MSGS = new ArrayList<>(Arrays.asList(MessageType.UPDATE, MessageType.NEW_POINT));
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketMessageHandler.class);
 
     private final EnumMap<MessageType, MessageHandler> handlers = new EnumMap<>(MessageType.class);
@@ -30,7 +33,10 @@ public class WebSocketMessageHandler {
             handler.handle(session, textMessage);
 
         } else {
-            LOGGER.warn("Handler for websocket message of type {} does not exist.", messageType.toString());
+
+            if (!IGNORE_LOGGING_MSGS.contains(messageType)) {
+                LOGGER.warn("Handler for websocket message of type {} does not exist.", messageType.toString());
+            }
         }
     }
 }

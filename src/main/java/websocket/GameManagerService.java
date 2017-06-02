@@ -142,6 +142,7 @@ public class GameManagerService {
                     guesserLogins.addAll(possibleGuessers.subList(0, playersCount));
 
                     possibleGuessers.removeAll(guesserLogins);
+                    drawPriorities.put(painterLogin, 0);
                     guesserLogins.forEach(this::increaseDrawingPriority);
 
                     final MultiplayerGame game = createMultiplayerGame(painterLogin, guesserLogins);

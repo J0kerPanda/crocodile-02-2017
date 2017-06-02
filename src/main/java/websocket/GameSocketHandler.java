@@ -90,15 +90,16 @@ public class GameSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
 
         try {
+
             final WebSocketMessage message = readMessage(textMessage, EmptyContent.class);
 
-            if (message.getTypeEnum() != MessageType.UPDATE) {
+            if (!WebSocketMessageHandler.IGNORE_LOGGING_MSGS.contains(message.getTypeEnum())) {
 
                 LOGGER.info("Got websocket message type {} from user {}.",
                     message.getTypeString(), SessionOperator.getLogin(session));
-
-                webSocketMessageHandler.handle(session, textMessage, message.getTypeEnum());
             }
+
+            webSocketMessageHandler.handle(session, textMessage, message.getTypeEnum());
 
         } catch (Exception exception) {
 

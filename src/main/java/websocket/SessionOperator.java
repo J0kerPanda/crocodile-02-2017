@@ -36,6 +36,11 @@ public final class SessionOperator {
         try {
             session.sendMessage(new TextMessage(OBJECT_MAPPER.writeValueAsString(message)));
 
+            if (!WebSocketMessageHandler.IGNORE_LOGGING_MSGS.contains(message.getTypeEnum())) {
+
+                LOGGER.info("Sent message of type {} to user {}", message.getTypeString(), getLogin(session));
+            }
+
         } catch (IOException exception) {
             LOGGER.error("Can't send websocket message to {}.", getLogin(session));
         }
