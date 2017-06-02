@@ -400,6 +400,7 @@ public class GameManagerService {
             return;
         }
 
+        scheduledGame.getPoints().clear();
         final ArrayList<WebSocketSession> sessions = gameRelationManager.getGameSessions(scheduledGame);
         final EmptyContent emptyContent = new EmptyContent();
 
