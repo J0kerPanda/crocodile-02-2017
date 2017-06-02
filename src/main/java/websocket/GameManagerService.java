@@ -12,11 +12,14 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 import socketmessages.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,8 +36,9 @@ public class GameManagerService {
     public static final int MULTIPLAYER_UPPER_GUESSERS_LIMIT = 4;
     public static final int MULTIPLAYER_PLAYERS_LIMIT = MULTIPLAYER_UPPER_GUESSERS_LIMIT + 1;
     public static final int MULTIPLAYER_GAME_SCORE = 3;
-    public static final int MULTIPLAYER_TIME_LIMIT = 120;
+    public static final int MULTIPLAYER_TIME_LIMIT = 180;
     public static final int QUEUE_REFRESH_TIME = 2;
+    public static final int STATISTICS_REFRESH_TIME = 600;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GameManagerService.class);
     private static final AtomicInteger ANSWER_ID_GEN = new AtomicInteger(1);
@@ -45,6 +49,7 @@ public class GameManagerService {
     //todo concurrent collections?
     private final GameRelationManager gameRelationManager = new GameRelationManager();
     private final LinkedHashMap<String, QueueRelation> queuedPlayers = new LinkedHashMap<>();
+    private final HashMap<String, Integer> drawPriorities = new HashMap<>();
 
     private final SingleplayerScheduledGameManager singleplayerManager;
     private final MultiplayerScheduledGameManager multiplayerManager;
@@ -65,17 +70,23 @@ public class GameManagerService {
         scheduler.scheduleAtFixedRate(
             new QueueManager()::checkQueue,
             QUEUE_REFRESH_TIME, QUEUE_REFRESH_TIME, TimeUnit.SECONDS);
+
+        scheduler.scheduleAtFixedRate(
+            drawPriorities::clear,
+            STATISTICS_REFRESH_TIME, STATISTICS_REFRESH_TIME, TimeUnit.SECONDS);
     }
 
     private static final class QueueRelation {
 
         private final PlayerRole role;
         private final WebSocketSession session;
+        private final int drawPriority;
 
-        QueueRelation(PlayerRole role, WebSocketSession session) {
+        QueueRelation(PlayerRole role, WebSocketSession session, int drawPriority) {
 
             this.role = role;
             this.session = session;
+            this.drawPriority = drawPriority;
         }
 
         public PlayerRole getRole() {
@@ -84,6 +95,10 @@ public class GameManagerService {
 
         public WebSocketSession getSession() {
             return session;
+        }
+
+        public int getDrawPriority() {
+            return drawPriority;
         }
     }
 
@@ -103,6 +118,7 @@ public class GameManagerService {
             possiblePainters.addAll(
                 queuedPlayers.values().stream()
                     .filter(e -> e.getRole() != PlayerRole.GUESSER)
+                    .sorted(Comparator.comparingInt(QueueRelation::getDrawPriority).reversed())
                     .map(e -> SessionOperator.getLogin(e.getSession()))
                     .collect(Collectors.toList()));
 
@@ -124,7 +140,10 @@ public class GameManagerService {
                     final ArrayList<String> guesserLogins = new ArrayList<>();
                     final int playersCount = Math.min(possibleGuessers.size(), MULTIPLAYER_UPPER_GUESSERS_LIMIT);
                     guesserLogins.addAll(possibleGuessers.subList(0, playersCount));
+
                     possibleGuessers.removeAll(guesserLogins);
+                    guesserLogins.forEach(this::increaseDrawingPriority);
+
                     final MultiplayerGame game = createMultiplayerGame(painterLogin, guesserLogins);
                     startTimer(game.getId(), GameType.MULTIPLAYER);
 
@@ -172,8 +191,8 @@ public class GameManagerService {
                     availableGames.remove(0);
 
                     game.getUserLogins().add(player);
-                    gameRelationManager.addGuesserRelation(
-                        session, scheduledGame, playerId);
+                    gameRelationManager.addGuesserRelation(session, scheduledGame, playerId);
+                    increaseDrawingPriority(player);
 
                     final WebSocketMessage<BaseGameContent> gameState = scheduledGame.getJoinGameMessage(player);
                     SessionOperator.sendMessage(session, gameState);
@@ -185,6 +204,10 @@ public class GameManagerService {
                     break;
                 }
             }
+        }
+
+        private void increaseDrawingPriority(@NotNull String login) {
+            drawPriorities.put(login, drawPriorities.getOrDefault(login, 0) + 1);
         }
     }
 
@@ -207,7 +230,8 @@ public class GameManagerService {
 
         clearData(session);
         final String login = SessionOperator.getLogin(session);
-        queuedPlayers.put(login, new QueueRelation(role, session));
+        drawPriorities.putIfAbsent(login, 0);
+        queuedPlayers.put(login, new QueueRelation(role, session, drawPriorities.get(login)));
     }
 
     public void addPoint(WebSocketSession session, PicturePointContent point) {
@@ -247,6 +271,7 @@ public class GameManagerService {
             scheduledGame.getGameStateMessage(login));
     }
 
+    @Async
     public void startTimer(int gameId, GameType gameType) {
 
         final ScheduledGame scheduledGame = getScheduledGame(gameId, gameType);

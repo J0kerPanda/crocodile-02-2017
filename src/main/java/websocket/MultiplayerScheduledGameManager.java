@@ -47,7 +47,7 @@ public class MultiplayerScheduledGameManager extends ScheduledGameManager<Multip
         @Override
         public synchronized void runLoseTask(@NotNull GameResult result) {
 
-            endMultiplayerGame(GameResult.PAINTER_LEFT, null);
+            endMultiplayerGame(result, null);
         }
 
         @Override
