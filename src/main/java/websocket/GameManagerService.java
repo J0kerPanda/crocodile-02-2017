@@ -38,8 +38,7 @@ public class GameManagerService {
     public static final int MULTIPLAYER_GAME_SCORE = 3;
     public static final int MULTIPLAYER_TIME_LIMIT = 180;
     public static final int QUEUE_REFRESH_TIME = 2;
-    public static final int STATISTICS_REFRESH_TIME = 600;
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(GameManagerService.class);
     private static final AtomicInteger ANSWER_ID_GEN = new AtomicInteger(1);
 
@@ -307,10 +306,7 @@ public class GameManagerService {
             return;
         }
 
-        if (!scheduledGame.cancelShutdown()) {
-            return;
-        }
-
+        scheduledGame.cancelShutdown();
         LOGGER.debug("Time left: {}.", scheduledGame.getTimeLeft());
 
         final boolean answerCorrect = scheduledGame.getGame().isCorrectAnswer(word);
@@ -508,6 +504,7 @@ public class GameManagerService {
     private @Nullable ScheduledGame getUserScheduledGame(String login) {
 
         final GameRelationManager.GameRelation gameRelation = gameRelationManager.getRelation(login);
+
         if (gameRelation == null) {
             return null;
         }
