@@ -70,10 +70,6 @@ public class GameManagerService {
         scheduler.scheduleAtFixedRate(
             new QueueManager()::checkQueue,
             QUEUE_REFRESH_TIME, QUEUE_REFRESH_TIME, TimeUnit.SECONDS);
-
-        scheduler.scheduleAtFixedRate(
-            drawPriorities::clear,
-            STATISTICS_REFRESH_TIME, STATISTICS_REFRESH_TIME, TimeUnit.SECONDS);
     }
 
     private static final class QueueRelation {
